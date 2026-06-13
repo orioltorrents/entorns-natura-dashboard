@@ -1,0 +1,183 @@
+/* CSS Personalitzat per al Dashboard d'Avaluació */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f4f6f9;
+    color: #333333;
+    line-height: 1.5;
+}
+
+/* Capçalera elegant i professional */
+.main-header {
+    background-color: #2c3e50;
+    color: #ffffff;
+    padding: 25px 20px;
+    border-bottom: 4px solid #3498db;
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.main-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.subtitle {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #bdc3c7;
+}
+
+/* Contenidor Principal */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 25px auto;
+    padding: 0 20px;
+    display: block;
+}
+
+/* Estils de targetes (Cards) */
+.controls-card, .chart-card, .table-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Disseny en taula per a controls */
+.controls-grid {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 15px 0;
+    margin: -10px -15px;
+}
+
+.control-group {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.control-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #4a5568;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.control-group select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #2d3748;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.control-group select:focus {
+    border-color: #3498db;
+}
+
+.control-group select:disabled {
+    background-color: #edf2f7;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+
+/* Indicador d'estat (Càrrega) */
+.status-box {
+    margin-top: 15px;
+    padding: 10px 15px;
+    background-color: #ebf8ff;
+    border-left: 4px solid #3182ce;
+    color: #2b6cb0;
+    font-size: 14px;
+    border-radius: 0 4px 4px 0;
+}
+
+.hide {
+    display: none !important;
+}
+
+/* Contenidor del gràfic */
+.chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.chart-card h2, .table-card h2 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #2d3748;
+    border-left: 4px solid #3498db;
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+
+/* Taula de dades descriptiva */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    background-color: #f7fafc;
+    color: #4a5568;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 2px solid #edf2f7;
+}
+
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #edf2f7;
+    color: #4a5568;
+}
+
+tr:hover td {
+    background-color: #f8fafc;
+}
+
+.text-center { text-align: center; }
+.text-muted { color: #a0aec0; }
+.text-bold { font-weight: bold; }
+
+/* Footer */
+.main-footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: #718096;
+    font-size: 12px;
+    background-color: #edf2f7;
+    margin-top: 5px;
+    border-top: 1px solid #e2e8f0;
+}

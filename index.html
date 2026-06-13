@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard d'Avaluació Interactiu</title>
+    <!-- Carreguem la llibreria de Gràfics Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-container">
+            <h1>Dashboard d'Avaluació Interactiu</h1>
+            <p class="subtitle">Anàlisi dinàmica del progrés i rendiment dels alumnes</p>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- SECCIÓ DE CONTROLS / FILTRES -->
+        <section class="controls-card">
+            <div class="controls-grid">
+                <!-- Filtre 1: Selecció de Projecte o Full -->
+                <div class="control-group">
+                    <label for="select-projecte">1. Selecciona el Projecte / Trimestre</label>
+                    <select id="select-projecte">
+                        <option value="">-- Carregant projectes... --</option>
+                    </select>
+                </div>
+
+                <!-- Filtre 2: Selecció de la Columna de Notes (Dinàmic) -->
+                <div class="control-group">
+                    <label for="select-columna">2. Columna de Notes o Variable</label>
+                    <select id="select-columna" disabled>
+                        <option value="">-- Selecciona primer un projecte --</option>
+                    </select>
+                </div>
+
+                <!-- Filtre 3: Filtre per Grup-Classe (Dinàmic) -->
+                <div class="control-group">
+                    <label for="select-grup">Filtra per Grup-Classe</label>
+                    <select id="select-grup" disabled>
+                        <option value="">[ Tots els grups ]</option>
+                    </select>
+                </div>
+
+                <!-- Filtre 4: Filtre per Rol (Dinàmic) -->
+                <div class="control-group">
+                    <label for="select-rol">Filtra per Rol Cooperatiu</label>
+                    <select id="select-rol" disabled>
+                        <option value="">[ Tots els rols ]</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Indicador de càrrega o estat -->
+            <div id="status-indicator" class="status-box hide">
+                <span class="spinner"></span> <span id="status-text">Carregant dades des de Google Sheets...</span>
+            </div>
+        </section>
+
+        <!-- SECCIÓ DE VISUALITZACIÓ (GRÀFIC) -->
+        <section class="chart-card">
+            <h2 id="chart-title">Visualització General del Grup</h2>
+            <div class="chart-container">
+                <canvas id="notesChart"></canvas>
+            </div>
+        </section>
+
+        <!-- SECCIÓ DE DADES EN DETALL (TAULA) -->
+        <section class="table-card">
+            <h2>Detall de l'Alumnat i Notes</h2>
+            <div class="table-responsive">
+                <table id="dades-taula">
+                    <thead>
+                        <tr id="taula-caps">
+                            <th>Alumne</th>
+                            <th>Grup</th>
+                            <th>Rol</th>
+                            <th>Nota Seleccionada</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taula-cos">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Selecciona un projecte i una columna per visualitzar les dades detallades.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>Dashboard connectat en temps real amb l'API de Google Apps Script. Allotjat a GitHub Pages.</p>
+    </footer>
+
+    <!-- Carreguem la lògica de l'aplicació -->
+    <script src="app.js"></script>
+</body>
+</html>
