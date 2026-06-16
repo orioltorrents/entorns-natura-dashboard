@@ -43,9 +43,12 @@
                 <!-- Filtre 3: Filtre per Grup-Classe (Dinàmic) -->
                 <div class="control-group">
                     <label for="select-grup">Filtra per Grup-Classe</label>
-                    <select id="select-grup" multiple size="4" disabled>
+                    <select id="select-grup" class="hidden-select" multiple disabled>
                         <option value="">[ Tots els grups ]</option>
                     </select>
+                    <div id="grup-pills" class="group-pills is-disabled" aria-label="Filtre per grup classe">
+                        <span class="group-pills-empty">Tots els grups</span>
+                    </div>
                 </div>
 
                 <!-- Filtre 4: Filtre per Rol (Dinàmic) -->

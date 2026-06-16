@@ -13,6 +13,7 @@ let llistaAlumnesMestre = null;
 const selectProjecte = document.getElementById('select-projecte');
 const selectColumna = document.getElementById('select-columna');
 const selectGrup = document.getElementById('select-grup');
+const grupPills = document.getElementById('grup-pills');
 const selectRol = document.getElementById('select-rol');
 const selectOrdre = document.getElementById('select-ordre');
 const statusIndicator = document.getElementById('status-indicator');
@@ -335,17 +336,19 @@ function processarEstructuraColumnes(dades) {
     
     if (colGrup) {
         const grupsUnics = [...new Set(dades.map(item => item[colGrup]))].filter(Boolean).sort();
-        selectGrup.innerHTML = '<option value="" selected>[ Tots els grups ]</option>';
+        selectGrup.innerHTML = '';
         grupsUnics.forEach(g => {
             const option = document.createElement('option');
             option.value = `${colGrup}|${g}`;
-            option.textContent = `Grup ${g}`;
+            option.textContent = g;
             selectGrup.appendChild(option);
         });
         selectGrup.disabled = false;
+        renderitzarPastillesGrup(grupsUnics, colGrup);
     } else {
         selectGrup.innerHTML = '<option value="">Sense columna grup</option>';
         selectGrup.disabled = true;
+        renderitzarPastillesGrup([], '');
     }
 
     // Detectar de forma única els Rols cooperatius existents en aquest full per crear el filtre
@@ -464,6 +467,53 @@ function obtenirOpcionsSeleccionades(select) {
     return Array.from(select.selectedOptions).map(option => option.value).filter(Boolean);
 }
 
+function renderitzarPastillesGrup(grups, colGrup) {
+    if (!grupPills) return;
+
+    grupPills.innerHTML = '';
+
+    if (!grups.length || !colGrup) {
+        grupPills.classList.add('is-disabled');
+        const buit = document.createElement('span');
+        buit.className = 'group-pills-empty';
+        buit.textContent = 'Sense columna grup';
+        grupPills.appendChild(buit);
+        return;
+    }
+
+    grupPills.classList.remove('is-disabled');
+    grups.forEach(grup => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'group-pill';
+        button.dataset.value = `${colGrup}|${grup}`;
+        button.textContent = grup;
+        button.setAttribute('aria-pressed', 'false');
+        button.addEventListener('click', () => alternarPastillaGrup(button.dataset.value));
+        grupPills.appendChild(button);
+    });
+}
+
+function sincronitzarPastillesGrup() {
+    if (!grupPills) return;
+
+    const seleccionats = new Set(obtenirOpcionsSeleccionades(selectGrup));
+    grupPills.querySelectorAll('.group-pill').forEach(button => {
+        const actiu = seleccionats.has(button.dataset.value);
+        button.classList.toggle('is-active', actiu);
+        button.setAttribute('aria-pressed', String(actiu));
+    });
+}
+
+function alternarPastillaGrup(valor) {
+    const option = Array.from(selectGrup.options).find(opcio => opcio.value === valor);
+    if (!option) return;
+
+    option.selected = !option.selected;
+    sincronitzarPastillesGrup();
+    filtrarDadesAplicar();
+}
+
 function gestionarCanviGrup() {
     const opcions = Array.from(selectGrup.options);
     const opcioTots = opcions.find(option => option.value === '');
@@ -473,6 +523,7 @@ function gestionarCanviGrup() {
         opcioTots.selected = false;
     }
 
+    sincronitzarPastillesGrup();
     filtrarDadesAplicar();
 }
 
@@ -760,8 +811,9 @@ function reiniciarInterficie() {
     actualitzarLogoProjecte({});
     selectColumna.innerHTML = '<option value="">-- Selecciona primer un projecte --</option>';
     selectColumna.disabled = true;
-    selectGrup.innerHTML = '<option value="" selected>[ Tots els grups ]</option>';
+    selectGrup.innerHTML = '';
     selectGrup.disabled = true;
+    renderitzarPastillesGrup([], '');
     selectRol.innerHTML = '<option value="">[ Tots els rols ]</option>';
     selectRol.disabled = true;
     selectOrdre.value = '';

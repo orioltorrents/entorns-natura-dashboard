@@ -110,9 +110,52 @@ body {
     transition: border-color 0.2s;
 }
 
-.control-group select[multiple] {
-    min-height: 118px;
+.hidden-select {
+    display: none;
+}
+
+.group-pills {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.group-pill {
+    min-height: 38px;
     padding: 8px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #2d3748;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.group-pill:hover {
+    border-color: #3498db;
+}
+
+.group-pill.is-active {
+    background-color: #2b6cb0;
+    border-color: #2b6cb0;
+    color: #ffffff;
+}
+
+.group-pills.is-disabled {
+    display: block;
+}
+
+.group-pills-empty {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background-color: #edf2f7;
+    color: #718096;
+    font-size: 14px;
 }
 
 .control-group select:focus {
