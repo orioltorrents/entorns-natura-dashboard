@@ -1,163 +1,3 @@
-const INDEX_SHEET_NAME = 'index';
-
-function doGet(e) {
-  try {
-    const accio = e.parameter.accio;
-
-    if (accio === 'obtenir_index') {
-      return jsonResponse({
-        status: 'success',
-        dades: obtenirIndex()
-      });
-    }
-
-    if (accio === 'obtenir_notes') {
-      const url = e.parameter.url;
-      const pestanya = e.parameter.pestanya;
-
-      if (!url || !pestanya) {
-        throw new Error('Falten els paràmetres url o pestanya.');
-      }
-
-      return jsonResponse({
-        status: 'success',
-        dades: obtenirNotes(url, pestanya)
-      });
-    }
-
-    throw new Error('Acció no reconeguda.');
-  } catch (error) {
-    return jsonResponse({
-      status: 'error',
-      message: error.message
-    });
-  }
-}
-
-function jsonResponse(payload) {
-  return ContentService
-    .createTextOutput(JSON.stringify(payload))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function obtenirIndex() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(INDEX_SHEET_NAME);
-
-  if (!sheet) {
-    throw new Error(`No s'ha trobat la pestanya ${INDEX_SHEET_NAME}.`);
-  }
-
-  return llegirTaulaComObjectes(sheet.getDataRange().getValues());
-}
-
-function obtenirNotes(urlOId, pestanya) {
-  const ss = obrirSpreadsheet(urlOId);
-  const sheet = ss.getSheetByName(pestanya);
-
-  if (!sheet) {
-    throw new Error(`No s'ha trobat la pestanya ${pestanya}.`);
-  }
-
-  const values = sheet.getDataRange().getDisplayValues();
-  if (values.length < 2) return [];
-
-  if (teCapcaleraSegonaFila(urlOId, pestanya)) {
-    return llegirProjecteAmbCapcaleraSegonaFila(values);
-  }
-
-  return llegirTaulaComObjectes(values);
-}
-
-function obrirSpreadsheet(urlOId) {
-  const indexEntry = trobarEntradaIndex(urlOId);
-  const valor = indexEntry && indexEntry.url ? indexEntry.url : urlOId;
-
-  if (/^https?:\/\//i.test(valor)) {
-    return SpreadsheetApp.openByUrl(valor);
-  }
-
-  if (/^[a-zA-Z0-9-_]{20,}$/.test(valor)) {
-    return SpreadsheetApp.openById(valor);
-  }
-
-  const fitxers = DriveApp.getFilesByName(valor);
-  if (!fitxers.hasNext()) {
-    throw new Error(`No s'ha trobat cap Google Sheet amb el nom o id: ${valor}`);
-  }
-
-  return SpreadsheetApp.open(fitxers.next());
-}
-
-function trobarEntradaIndex(urlOId) {
-  const index = obtenirIndex();
-  return index.find(item => item.url === urlOId || item.nom === urlOId || item.id === urlOId);
-}
-
-function llegirTaulaComObjectes(values) {
-  if (!values || values.length < 2) return [];
-
-  const headers = ferCapcaleresUniques(values[0]);
-  return values.slice(1)
-    .filter(fila => fila.some(valor => String(valor).trim() !== ''))
-    .map(fila => objecteDesDeFila(headers, fila));
-}
-
-function llegirProjecteAmbCapcaleraSegonaFila(values) {
-  const headersOriginals = values[1];
-  const headers = ferCapcaleresUniques(headersOriginals.map((header, index) => {
-    if (index === 3) return normalitzarHeaderSiBuit(header, 'grup-classe');
-    if (index === 5) return normalitzarHeaderSiBuit(header, 'cognoms, nom');
-    if (index === 8) return normalitzarHeaderSiBuit(header, 'rol');
-    return header;
-  }));
-
-  return values.slice(2)
-    .filter(fila => fila.some(valor => String(valor).trim() !== ''))
-    .map(fila => objecteDesDeFila(headers, fila));
-}
-
-function normalitzarHeaderSiBuit(header, fallback) {
-  const text = String(header || '').trim();
-  return text || fallback;
-}
-
-function objecteDesDeFila(headers, fila) {
-  return headers.reduce((registre, header, index) => {
-    registre[header] = fila[index] || '';
-    return registre;
-  }, {});
-}
-
-function ferCapcaleresUniques(headers) {
-  const comptador = {};
-
-  return headers.map((header, index) => {
-    const base = String(header || `Columna ${index + 1}`).trim() || `Columna ${index + 1}`;
-    comptador[base] = (comptador[base] || 0) + 1;
-    return comptador[base] === 1 ? base : `${base} ${comptador[base]}`;
-  });
-}
-
-function teCapcaleraSegonaFila(urlOId, pestanya) {
-  const text = normalitzarText(`${urlOId} ${pestanya}`);
-  return text.includes('orenetes')
-    || text.includes('liquencity')
-    || text.includes('liquen city')
-    || text.includes('vespa')
-    || text.includes('velutina');
-}
-
-function normalitzarText(text) {
-  return String(text || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[_-]/g, ' ');
-}
-
-_______
-
 const INDEX_SHEET_NAME = 'fitxers';
 const MASTER_SPREADSHEET_ID = '';
 const ALLOW_DRIVE_NAME_LOOKUP = true;
@@ -254,7 +94,7 @@ function obtenirNotes(urlOFitxer, nomPestanya, filaCapcaleresParam) {
   }
 
   const valors = sheet.getDataRange().getDisplayValues();
-  return convertirTaulaAObjectes(valors, obtenirFilaCapcaleres(valors, filaCapcaleresParam));
+  return convertirTaulaAObjectes(valors, obtenirFilaCapcaleres(valors, filaCapcaleresParam, urlOFitxer, nomPestanya));
 }
 
 function obtenirSpreadsheetMestre() {
@@ -325,7 +165,7 @@ function convertirTaulaAObjectes(valors, filaCapcaleres) {
 
   if (!valors || valors.length <= indexCapcaleres) return [];
 
-  const capcaleres = normalitzarCapcaleres(valors[indexCapcaleres]);
+  const capcaleres = normalitzarCapcaleres(valors[indexCapcaleres], filaCapcaleres);
 
   return valors.slice(indexCapcaleres + 1)
     .filter(fila => fila.some(valor => String(valor).trim() !== ''))
@@ -341,11 +181,15 @@ function convertirTaulaAObjectes(valors, filaCapcaleres) {
     });
 }
 
-function obtenirFilaCapcaleres(valors, filaCapcaleresParam) {
+function obtenirFilaCapcaleres(valors, filaCapcaleresParam, urlOId, pestanya) {
   const filaConfigurada = parseInt(filaCapcaleresParam, 10);
 
   if (!isNaN(filaConfigurada) && filaConfigurada > 0) {
     return filaConfigurada;
+  }
+
+  if (teCapcaleraSegonaFila(urlOId, pestanya)) {
+    return 2;
   }
 
   if (!valors || valors.length < 2) {
@@ -356,13 +200,55 @@ function obtenirFilaCapcaleres(valors, filaCapcaleresParam) {
   const fila2 = valors[1].map(valor => String(valor).trim()).filter(Boolean);
 
   const fila1SemblaPesos = fila1.length > 0 && fila1.every(valor => /^\d+([,.]\d+)?%$/.test(valor));
+  const fila1SenseText = fila1.length > 0 && fila1.every(valor => !/[a-zA-ZÀ-ÿ]/.test(valor));
   const fila2SemblaCapcalera = fila2.some(valor => /[a-zA-ZÀ-ÿ]/.test(valor));
+  const fila2SemblaMesHeader = fila2.length >= Math.max(3, fila1.length) && fila2SemblaCapcalera;
 
-  return fila1SemblaPesos && fila2SemblaCapcalera ? 2 : 1;
+  if (fila1SemblaPesos && fila2SemblaCapcalera) {
+    return 2;
+  }
+
+  if (fila1SenseText && fila2SemblaMesHeader) {
+    return 2;
+  }
+
+  return 1;
 }
 
-function normalitzarCapcaleres(capcaleres) {
-  return capcaleres.map(capcalera => String(capcalera).trim().toLowerCase());
+function teCapcaleraSegonaFila(urlOId, pestanya) {
+  const text = normalitzarText(`${urlOId} ${pestanya}`);
+  return text.includes('orenetes')
+    || text.includes('liquencity')
+    || text.includes('liquen city')
+    || text.includes('vespa')
+    || text.includes('velutina');
+}
+
+function normalitzarText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[_-]/g, ' ');
+}
+
+function normalitzarCapcaleres(capcaleres, filaCapcaleres) {
+  const comptador = {};
+
+  return capcaleres.map((capcalera, index) => {
+    let text = String(capcalera || '').trim().toLowerCase();
+
+    if (filaCapcaleres === 2) {
+      if (index === 3 && !text) text = 'grup-classe';
+      if (index === 5 && !text) text = 'cognoms, nom';
+      if (index === 8 && !text) text = 'rol';
+    }
+
+    if (!text) return '';
+
+    comptador[text] = (comptador[text] || 0) + 1;
+    return comptador[text] === 1 ? text : text + ' ' + comptador[text];
+  });
 }
 
 function retornarJson(payload) {

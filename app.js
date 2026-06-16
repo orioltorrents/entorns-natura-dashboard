@@ -241,16 +241,32 @@ function adaptarCapcaleraSegonaFila(dades) {
 
 function afegirNomsGenerics(dades) {
     return dades.map((fila, index) => {
+        // Busca la columna amb els noms: normalment 'cognoms, nom' o 'nom'
+        let nomAlumne = '';
+        
+        for (const [clau, valor] of Object.entries(fila)) {
+            const clausNormalitzada = normalitzarText(clau);
+            if (clausNormalitzada.includes('cognoms') || 
+                (clausNormalitzada === 'nom' || clausNormalitzada === 'nom alumne')) {
+                nomAlumne = String(valor).trim();
+                if (nomAlumne) break; // Si trobem un nom no buit, parem
+            }
+        }
+        
+        // Si no hem trobat nom, usem el genèric com a fallback
+        if (!nomAlumne) {
+            nomAlumne = `Alumne ${index + 1}`;
+        }
+        
         return {
-            'dashboard nom alumne': `Alumne ${index + 1}`,
+            'dashboard nom alumne': nomAlumne,
             ...fila
         };
     });
 }
 
 function prepararDadesProjecte(dades, projecte) {
-    if (!usaCapcaleraSegonaFila(projecte)) return dades;
-    return afegirNomsGenerics(adaptarCapcaleraSegonaFila(dades));
+    return dades;
 }
 
 function actualitzarLogoProjecte(projecte) {
@@ -605,6 +621,10 @@ function esColumnaRol(capcalera) {
 
 function esColumnaNomAlumne(capcalera) {
     const low = normalitzarCapcalera(capcalera);
+    const esAlumneGenerico = /^alumne?s? \d+$/.test(low);
+
+    if (esAlumneGenerico) return false;
+
     return low === 'nom'
         || low === 'dashboard nom alumne'
         || low.includes('cognoms nom')
