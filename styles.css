@@ -197,10 +197,17 @@ body {
 }
 
 .summary-title,
-.summary-total {
+.summary-total,
+.summary-missing {
     color: #4a5568;
     font-size: 13px;
     font-weight: 700;
+}
+
+.summary-missing {
+    padding: 5px 8px;
+    background-color: #f1f5f9;
+    border-radius: 6px;
 }
 
 .summary-pill {

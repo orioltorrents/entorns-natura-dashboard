@@ -684,7 +684,7 @@ function filtrarDadesAplicar() {
     const valorsOriginals = dadesFiltrades.map(item => item[columnaNotaTriada]);
     const valorsNotes = dadesFiltrades.map(item => {
         const valor = parseValorGrafic(item[columnaNotaTriada]);
-        return isNaN(valor) ? 0 : valor;
+        return isNaN(valor) ? null : valor;
     });
 
     dibuixarGrafic(labelsAlumnes, valorsNotes, columnaNotaTriada, {
