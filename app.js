@@ -388,8 +388,29 @@ const NOTES_ASSOLIMENT = {
     AE: 4
 };
 
+const TEXTOS_SENSE_NOTA = new Set([
+    '',
+    '-',
+    'N/A',
+    'N.A.',
+    'SENSE NOTA',
+    'ABS',
+    'ABSENT',
+    'NP',
+    'NO PRESENTAT',
+    'NO PRESENTADA'
+]);
+
 function normalitzarNotaText(valor) {
     return String(valor || '').trim().toUpperCase();
+}
+
+function esValorSenseNota(valor) {
+    return TEXTOS_SENSE_NOTA.has(normalitzarNotaText(valor));
+}
+
+function esNotaAssolimentValida(valor) {
+    return Object.prototype.hasOwnProperty.call(NOTES_ASSOLIMENT, normalitzarNotaText(valor));
 }
 
 function parseValorGrafic(valor) {
@@ -418,7 +439,7 @@ function formatValorGrafic(valor) {
 function esColumnaAssoliment(dades, columnaNota) {
     const valorsAmbDades = dades
         .map(item => normalitzarNotaText(item[columnaNota]))
-        .filter(Boolean);
+        .filter(valor => !TEXTOS_SENSE_NOTA.has(valor));
 
     return valorsAmbDades.length > 0
         && valorsAmbDades.every(valor => Object.prototype.hasOwnProperty.call(NOTES_ASSOLIMENT, valor));
@@ -430,9 +451,11 @@ function calcularRecompteAssoliments(dades, columnaNota) {
         if (Object.prototype.hasOwnProperty.call(recompte, nota)) {
             recompte[nota] += 1;
             recompte.total += 1;
+        } else if (esValorSenseNota(nota)) {
+            recompte.senseNota += 1;
         }
         return recompte;
-    }, { AE: 0, AN: 0, AS: 0, NA: 0, total: 0 });
+    }, { AE: 0, AN: 0, AS: 0, NA: 0, total: 0, senseNota: 0 });
 }
 
 function actualitzarResumAssoliments(dades, columnaNota, mostrar) {
@@ -452,6 +475,7 @@ function actualitzarResumAssoliments(dades, columnaNota, mostrar) {
         <span class="summary-pill summary-as">AS <strong>${recompte.AS}</strong></span>
         <span class="summary-pill summary-na">NA <strong>${recompte.NA}</strong></span>
         <span class="summary-total">Total <strong>${recompte.total}</strong></span>
+        ${recompte.senseNota ? `<span class="summary-missing">Sense nota <strong>${recompte.senseNota}</strong></span>` : ''}
     `;
     resumAssoliments.classList.remove('hide');
 }
