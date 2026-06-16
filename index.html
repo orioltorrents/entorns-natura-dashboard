@@ -55,6 +55,16 @@
                         <option value="">[ Tots els rols ]</option>
                     </select>
                 </div>
+
+                <!-- Ordenació de les dades representades -->
+                <div class="control-group">
+                    <label for="select-ordre">Ordena per nota</label>
+                    <select id="select-ordre">
+                        <option value="">Ordre original</option>
+                        <option value="desc">De més gran a més petit</option>
+                        <option value="asc">De més petit a més gran</option>
+                    </select>
+                </div>
             </div>
             
             <!-- Indicador de càrrega o estat -->
@@ -66,6 +76,7 @@
         <!-- SECCIÓ DE VISUALITZACIÓ (GRÀFIC) -->
         <section class="chart-card">
             <h2 id="chart-title">Visualització General del Grup</h2>
+            <div id="resum-assoliments" class="achievement-summary hide" aria-live="polite"></div>
             <div class="chart-container">
                 <canvas id="notesChart"></canvas>
             </div>

@@ -14,12 +14,14 @@ const selectProjecte = document.getElementById('select-projecte');
 const selectColumna = document.getElementById('select-columna');
 const selectGrup = document.getElementById('select-grup');
 const selectRol = document.getElementById('select-rol');
+const selectOrdre = document.getElementById('select-ordre');
 const statusIndicator = document.getElementById('status-indicator');
 const statusText = document.getElementById('status-text');
 const chartTitle = document.getElementById('chart-title');
 const taulaCaps = document.getElementById('taula-caps');
 const taulaCos = document.getElementById('taula-cos');
 const projectLogo = document.getElementById('project-logo');
+const resumAssoliments = document.getElementById('resum-assoliments');
 
 const LOGO_PER_DEFECTE = {
     src: 'assets/logos/Entorns-de-natura.png',
@@ -35,7 +37,7 @@ const LOGOS_PROJECTES = [
 ];
 
 const PROJECTES_CAPCALERA_SEGONA_FILA = ['liquencity', 'liquen city', 'orenetes', 'vespa', 'velutina'];
-const PROJECTES_AMB_LLISTA_MESTRA = ['liquencity', 'liquen city', 'orenetes', 'vespa', 'velutina'];
+const PROJECTES_AMB_LLISTA_MESTRA = [];
 const PROJECTES_ROL_DERIVAT = ['eia', 'estudi impacte ambiental'];
 
 // Paraules clau per identificar quines columnes del full NO són notes numèriques
@@ -77,6 +79,7 @@ function inicialitzarAplicacio() {
     selectColumna.addEventListener('change', actualitzarFiltresIVisualitzacio);
     selectGrup.addEventListener('change', gestionarCanviGrup);
     selectRol.addEventListener('change', filtrarDadesAplicar);
+    selectOrdre.addEventListener('change', filtrarDadesAplicar);
 }
 
 // Omple el primer desplegable amb la llista dels teus projectes
@@ -171,6 +174,7 @@ function obtenirProjecteLlistaAlumnes() {
 }
 
 function carregarLlistaAlumnesMestre() {
+    if (PROJECTES_AMB_LLISTA_MESTRA.length === 0) return Promise.resolve([]);
     if (llistaAlumnesMestre) return Promise.resolve(llistaAlumnesMestre);
 
     const projecteLlista = obtenirProjecteLlistaAlumnes();
@@ -234,9 +238,18 @@ function adaptarCapcaleraSegonaFila(dades) {
     });
 }
 
+function afegirNomsGenerics(dades) {
+    return dades.map((fila, index) => {
+        return {
+            'dashboard nom alumne': `Alumne ${index + 1}`,
+            ...fila
+        };
+    });
+}
+
 function prepararDadesProjecte(dades, projecte) {
     if (!usaCapcaleraSegonaFila(projecte)) return dades;
-    return adaptarCapcaleraSegonaFila(dades);
+    return afegirNomsGenerics(adaptarCapcaleraSegonaFila(dades));
 }
 
 function actualitzarLogoProjecte(projecte) {
@@ -365,6 +378,81 @@ function parseNota(valor) {
     return parseFloat(String(valor).replace(',', '.'));
 }
 
+const NOTES_ASSOLIMENT = {
+    NA: 1,
+    AS: 2,
+    AN: 3,
+    AE: 4
+};
+
+function normalitzarNotaText(valor) {
+    return String(valor || '').trim().toUpperCase();
+}
+
+function parseValorGrafic(valor) {
+    const notaText = normalitzarNotaText(valor);
+    if (Object.prototype.hasOwnProperty.call(NOTES_ASSOLIMENT, notaText)) {
+        return NOTES_ASSOLIMENT[notaText];
+    }
+
+    return parseNota(valor);
+}
+
+function formatValorGrafic(valor) {
+    const notaText = normalitzarNotaText(valor);
+    if (Object.prototype.hasOwnProperty.call(NOTES_ASSOLIMENT, notaText)) {
+        return notaText;
+    }
+
+    const notaNumerica = parseNota(valor);
+    if (isNaN(notaNumerica)) return '';
+
+    return notaNumerica.toLocaleString('ca-ES', {
+        maximumFractionDigits: 2
+    });
+}
+
+function esColumnaAssoliment(dades, columnaNota) {
+    const valorsAmbDades = dades
+        .map(item => normalitzarNotaText(item[columnaNota]))
+        .filter(Boolean);
+
+    return valorsAmbDades.length > 0
+        && valorsAmbDades.every(valor => Object.prototype.hasOwnProperty.call(NOTES_ASSOLIMENT, valor));
+}
+
+function calcularRecompteAssoliments(dades, columnaNota) {
+    return dades.reduce((recompte, item) => {
+        const nota = normalitzarNotaText(item[columnaNota]);
+        if (Object.prototype.hasOwnProperty.call(recompte, nota)) {
+            recompte[nota] += 1;
+            recompte.total += 1;
+        }
+        return recompte;
+    }, { AE: 0, AN: 0, AS: 0, NA: 0, total: 0 });
+}
+
+function actualitzarResumAssoliments(dades, columnaNota, mostrar) {
+    if (!resumAssoliments) return;
+
+    if (!mostrar) {
+        resumAssoliments.classList.add('hide');
+        resumAssoliments.innerHTML = '';
+        return;
+    }
+
+    const recompte = calcularRecompteAssoliments(dades, columnaNota);
+    resumAssoliments.innerHTML = `
+        <span class="summary-title">Recompte</span>
+        <span class="summary-pill summary-ae">AE <strong>${recompte.AE}</strong></span>
+        <span class="summary-pill summary-an">AN <strong>${recompte.AN}</strong></span>
+        <span class="summary-pill summary-as">AS <strong>${recompte.AS}</strong></span>
+        <span class="summary-pill summary-na">NA <strong>${recompte.NA}</strong></span>
+        <span class="summary-total">Total <strong>${recompte.total}</strong></span>
+    `;
+    resumAssoliments.classList.remove('hide');
+}
+
 function normalitzarCapcalera(capcalera) {
     return normalitzarText(capcalera)
         .replace(/[^a-z0-9]+/g, ' ')
@@ -386,6 +474,23 @@ function gestionarCanviGrup() {
     }
 
     filtrarDadesAplicar();
+}
+
+function ordenarDadesPerNota(dades, columnaNota, ordre) {
+    if (!ordre) return dades;
+
+    return [...dades].sort((a, b) => {
+        const valorA = parseValorGrafic(a[columnaNota]);
+        const valorB = parseValorGrafic(b[columnaNota]);
+        const aInvalid = isNaN(valorA);
+        const bInvalid = isNaN(valorB);
+
+        if (aInvalid && bInvalid) return 0;
+        if (aInvalid) return 1;
+        if (bInvalid) return -1;
+
+        return ordre === 'asc' ? valorA - valorB : valorB - valorA;
+    });
 }
 
 function capcaleraConte(capcalera, claus) {
@@ -487,6 +592,8 @@ function filtrarDadesAplicar() {
         dadesFiltrades = dadesFiltrades.filter(item => String(item[nomColRol]) === valorRol);
     }
 
+    dadesFiltrades = ordenarDadesPerNota(dadesFiltrades, columnaNotaTriada, selectOrdre.value);
+
     // Buscar quines columnes d'identificació real tenim per pintar la taula
     const totesLesCol = Object.keys(dadesProjecteActual[0]);
     const colNomAlumne = trobarColumnaNomAlumne(totesLesCol) || totesLesCol[0];
@@ -497,12 +604,18 @@ function filtrarDadesAplicar() {
 
     // Preparar les dades específiques per al gràfic de barres
     const labelsAlumnes = dadesFiltrades.map(item => item[colNomAlumne] || 'Anònim');
+    const esAssoliment = esColumnaAssoliment(dadesFiltrades, columnaNotaTriada);
+    actualitzarResumAssoliments(dadesFiltrades, columnaNotaTriada, esAssoliment);
+    const valorsOriginals = dadesFiltrades.map(item => item[columnaNotaTriada]);
     const valorsNotes = dadesFiltrades.map(item => {
-        const valor = parseNota(item[columnaNotaTriada]);
+        const valor = parseValorGrafic(item[columnaNotaTriada]);
         return isNaN(valor) ? 0 : valor;
     });
 
-    dibuixarGrafic(labelsAlumnes, valorsNotes, columnaNotaTriada);
+    dibuixarGrafic(labelsAlumnes, valorsNotes, columnaNotaTriada, {
+        valorsOriginals,
+        esAssoliment
+    });
     generarTaulaDetallada(dadesFiltrades, colNomAlumne, colGrupNom, colRolNom, columnaNotaTriada);
 }
 
@@ -513,22 +626,23 @@ const pluginValorsBarres = {
 
         chart.data.datasets.forEach((dataset, datasetIndex) => {
             const meta = chart.getDatasetMeta(datasetIndex);
+            const moltesBarres = dataset.data.length > 25;
 
             meta.data.forEach((barra, index) => {
                 const valor = dataset.data[index];
                 if (valor === null || valor === undefined || isNaN(valor)) return;
 
-                const text = Number(valor).toLocaleString('ca-ES', {
-                    maximumFractionDigits: 2
-                });
+                const text = dataset.valorsOriginals
+                    ? formatValorGrafic(dataset.valorsOriginals[index])
+                    : Number(valor).toLocaleString('ca-ES', { maximumFractionDigits: 2 });
                 const alcadaBarra = Math.abs(barra.base - barra.y);
-                const dinsBarra = alcadaBarra >= 18;
+                const dinsBarra = !moltesBarres && alcadaBarra >= 18;
 
                 ctx.save();
-                ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.font = `${moltesBarres ? '10px' : 'bold 11px'} -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = dinsBarra ? 'top' : 'bottom';
-                ctx.fillStyle = dinsBarra ? '#ffffff' : '#2d3748';
+                ctx.fillStyle = dinsBarra ? '#ffffff' : '#111827';
                 ctx.fillText(text, barra.x, dinsBarra ? barra.y + 4 : barra.y - 4);
                 ctx.restore();
             });
@@ -537,8 +651,9 @@ const pluginValorsBarres = {
 };
 
 // Dibuixa o actualitza el gràfic de barres dinàmic utilitzant Chart.js
-function dibuixarGrafic(etiquetes, valors, titolSerie) {
+function dibuixarGrafic(etiquetes, valors, titolSerie, opcions = {}) {
     const ctx = document.getElementById('notesChart').getContext('2d');
+    const esAssoliment = Boolean(opcions.esAssoliment);
     
     if (chartInstance) {
         chartInstance.destroy();
@@ -551,6 +666,7 @@ function dibuixarGrafic(etiquetes, valors, titolSerie) {
             datasets: [{
                 label: titolSerie,
                 data: valors,
+                valorsOriginals: opcions.valorsOriginals || [],
                 backgroundColor: 'rgba(52, 152, 219, 0.65)',
                 borderColor: 'rgba(41, 128, 185, 1)',
                 borderWidth: 1,
@@ -565,9 +681,19 @@ function dibuixarGrafic(etiquetes, valors, titolSerie) {
                 y: {
                     beginAtZero: true,
                     min: 0,
-                    max: 4,
+                    max: 4.25,
                     grid: { color: '#edf2f7' },
-                    title: { display: true, text: 'Nota' }
+                    ticks: {
+                        stepSize: 1,
+                        callback: value => {
+                            if (esAssoliment) {
+                                return { 1: 'NA', 2: 'AS', 3: 'AN', 4: 'AE' }[value] || '';
+                            }
+
+                            return value <= 4 ? value : '';
+                        }
+                    },
+                    title: { display: true, text: esAssoliment ? 'Assoliment' : 'Nota' }
                 },
                 x: {
                     grid: { display: false },
@@ -638,6 +764,8 @@ function reiniciarInterficie() {
     selectGrup.disabled = true;
     selectRol.innerHTML = '<option value="">[ Tots els rols ]</option>';
     selectRol.disabled = true;
+    selectOrdre.value = '';
+    actualitzarResumAssoliments([], '', false);
     chartTitle.textContent = 'Visualització General del Grup';
     if(chartInstance) chartInstance.destroy();
     taulaCos.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Selecciona un projecte i una columna per visualitzar les dades detailed.</td></tr>';
