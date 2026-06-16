@@ -177,6 +177,11 @@ function actualitzarFiltresIVisualitzacio() {
     filtrarDadesAplicar();
 }
 
+function parseNota(valor) {
+    if (valor === null || valor === undefined) return NaN;
+    return parseFloat(String(valor).replace(',', '.'));
+}
+
 function filtrarDadesAplicar() {
     const columnaNotaTriada = selectColumna.value;
     if (!columnaNotaTriada) return;
@@ -205,7 +210,7 @@ function filtrarDadesAplicar() {
     // Preparar les dades específiques per al gràfic de barres
     const labelsAlumnes = dadesFiltrades.map(item => item[colNomAlumne] || 'Anònim');
     const valorsNotes = dadesFiltrades.map(item => {
-        const valor = parseFloat(item[columnaNotaTriada]);
+        const valor = parseNota(item[columnaNotaTriada]);
         return isNaN(valor) ? 0 : valor;
     });
 
@@ -241,7 +246,8 @@ function dibuixarGrafic(etiquetes, valors, titolSerie) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 10, 
+                    min: 0,
+                    max: 4,
                     grid: { color: '#edf2f7' },
                     title: { display: true, text: 'Nota' }
                 },
@@ -289,8 +295,8 @@ function generarTaulaDetallada(dades, colNom, colGrup, colRol, colNota) {
         tdNota.textContent = (valorNota !== undefined && valorNota !== "") ? valorNota : 'N/A';
         
         // Alerta visual de color vermell si suspèn (< 5)
-        const notaNum = parseFloat(valorNota);
-        if(!isNaN(notaNum) && notaNum < 5) {
+        const notaNum = parseNota(valorNota);
+        if(!isNaN(notaNum) && notaNum < 2) {
             tdNota.style.color = '#e74c3c';
             tdNota.style.fontWeight = 'bold';
         }
