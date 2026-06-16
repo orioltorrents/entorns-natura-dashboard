@@ -4,7 +4,7 @@ Dashboard web per visualitzar notes, assoliments i dades d'auto/coavaluacio dels
 
 El frontend esta fet amb HTML, CSS i JavaScript pur, i es connecta a Google Sheets mitjancant una API de Google Apps Script.
 
-## Funcionalitats
+## Funcionalitats generals
 
 - Carrega la llista de projectes des d'un full mestre de Google Sheets.
 - Mostra logos dinamics segons el projecte seleccionat:
