@@ -12,8 +12,11 @@
 
     <header class="main-header">
         <div class="header-container">
-            <h1>Dashboard d'Avaluació Interactiu</h1>
-            <p class="subtitle">Anàlisi dinàmica del progrés i rendiment dels alumnes</p>
+            <div class="header-text">
+                <h1>Entorns de Natura - Dashboard</h1>
+                <p class="subtitle">Anàlisi dinàmica del progrés dels alumnes durant tot el curs</p>
+            </div>
+            <img id="project-logo" class="project-logo hide" src="" alt="">
         </div>
     </header>
 
@@ -40,7 +43,7 @@
                 <!-- Filtre 3: Filtre per Grup-Classe (Dinàmic) -->
                 <div class="control-group">
                     <label for="select-grup">Filtra per Grup-Classe</label>
-                    <select id="select-grup" disabled>
+                    <select id="select-grup" multiple size="4" disabled>
                         <option value="">[ Tots els grups ]</option>
                     </select>
                 </div>
