@@ -132,10 +132,7 @@ function processarEstructuraColumnes(dades) {
     selectColumna.disabled = false;
 
     // Detectar de forma única els Grups existents en aquest full per crear el filtre
-    const colGrup = totesLesColumnes.find(c => {
-        const low = c.toLowerCase();
-        return low === 'grup-classe' || low === 'grup' || low === 'classe';
-    });
+    const colGrup = totesLesColumnes.find(esColumnaGrup);
     
     if (colGrup) {
         const grupsUnics = [...new Set(dades.map(item => item[colGrup]))].filter(Boolean).sort();
@@ -182,6 +179,15 @@ function parseNota(valor) {
     return parseFloat(String(valor).replace(',', '.'));
 }
 
+function normalitzarCapcalera(capcalera) {
+    return String(capcalera).toLowerCase().trim().replace(/_/g, '-');
+}
+
+function esColumnaGrup(capcalera) {
+    const low = normalitzarCapcalera(capcalera);
+    return low === 'grup-classe' || low === 'grup' || low === 'classe';
+}
+
 function filtrarDadesAplicar() {
     const columnaNotaTriada = selectColumna.value;
     if (!columnaNotaTriada) return;
@@ -202,7 +208,7 @@ function filtrarDadesAplicar() {
     // Buscar quines columnes d'identificació real tenim per pintar la taula
     const totesLesCol = Object.keys(dadesProjecteActual[0]);
     const colNomAlumne = totesLesCol.find(c => c.toLowerCase() === 'cognoms, nom' || c.toLowerCase() === 'nom') || totesLesCol[0];
-    const colGrupNom = totesLesCol.find(c => c.toLowerCase() === 'grup-classe' || c.toLowerCase() === 'grup') || '';
+    const colGrupNom = totesLesCol.find(esColumnaGrup) || '';
     const colRolNom = totesLesCol.find(c => c.toLowerCase() === 'rol') || '';
 
     chartTitle.textContent = `Distribució de Notes per a: ${columnaNotaTriada}`;
